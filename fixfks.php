@@ -5,9 +5,6 @@ namespace Craft;
 // Path to your craft/ folder
 $craftPath = '../craft';
 
-// Have Craft use the 'fresh' environment configs
-define('CRAFT_ENVIRONMENT', 'fresh');
-
 // Do this thing
 $bootstrapPath = rtrim($craftPath, '/').'/app/bootstrap.php';
 if (!file_exists($bootstrapPath))
