@@ -1,7 +1,7 @@
 Craft Foreign Key Restoration Tool
 ----------------------------------
 
-This tool composes of two scripts:
+This tool is composed of two scripts:
 
 * **dumpfks.php** – used to analyze a fresh Craft install and save a JSON dump
   of all the foreign keys in the database. Results will be stored in the
