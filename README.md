@@ -18,7 +18,7 @@ This tool is composed of two scripts:
 If you have a database that is missing some foreign keys, follow these steps:
 
 1. Check the fkdumps/ folder and see if a foreign key dump exists for your
-   installed version of Craft. If so, skip to step 7.
+   installed version of Craft. If so, skip to step 8.
 2. Create a new database, which will be used to install a tepmorary version of
    Craft.
 3. If craft/config/db.php isn’t already a [multi-environment config] file, move
@@ -41,12 +41,14 @@ If you have a database that is missing some foreign keys, follow these steps:
 
 5. Upload dumpfks.php to your web server and access it with your browser.
 6. Click the “Dump FKs for Craft X.Y.Z” button.
-7. Upload fixfks.php to your web server and access it with your browser.
-8. Click the “Restore missing FKs” button at the bottom of the report.
+7. Once the dump has been created, you can delete the database created in step
+   2, and the `'fresh'` environment config created in step 3.
+8. Upload fixfks.php to your web server and access it with your browser.
+9. Click the “Restore missing FKs” button at the bottom of the report.
 
 Once the script is finished, your database should all set.
 
-If you had to create your own foreign key dump (steps 2-6), please submit a pull
+If you had to create your own foreign key dump (steps 2-7), please submit a pull
 request with the new file, or send it to support@buildwithcraft.com. Thank you!
 
 [multi-environment config]: http://buildwithcraft.com/docs/multi-environment-configs
