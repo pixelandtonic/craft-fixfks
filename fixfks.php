@@ -2,8 +2,6 @@
 
 namespace Craft;
 
-define('CRAFT_ENVIRONMENT', 'broken');
-
 /** @var $app WebApp */
 $app = require('craft/app/bootstrap.php');
 
