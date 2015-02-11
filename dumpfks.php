@@ -2,10 +2,21 @@
 
 namespace Craft;
 
+// Path to your craft/ folder
+$craftPath = '../craft';
+
+// Have Craft use the 'fresh' environment configs
 define('CRAFT_ENVIRONMENT', 'fresh');
 
+// Do this thing
+$bootstrapPath = rtrim($craftPath, '/').'/app/bootstrap.php';
+if (!file_exists($bootstrapPath))
+{
+	throw new Exception('Could not locale a Craft bootstrap file. Make sure that `$craftPath` is set correctly.');
+}
+
 /** @var $app WebApp */
-$app = require('craft/app/bootstrap.php');
+$app = require($bootstrapPath);
 $database = $app->config->get('database', ConfigFile::Db);
 $tablePrefix = $app->config->get('tablePrefix', ConfigFile::Db);
 $version = $app->getVersion().'.'.$app->getBuild();
