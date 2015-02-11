@@ -23,7 +23,7 @@ $version = $app->getVersion().'.'.$app->getBuild();
 
 if ($tablePrefix)
 {
-	throw new Exception('This tool requires Craft tobe configured without a DB table prefix.');
+	throw new Exception('This tool requires Craft to be configured without a DB table prefix.');
 }
 
 $run = !empty($_POST['run']);
