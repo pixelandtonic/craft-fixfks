@@ -6,7 +6,7 @@ This tool is composed of two scripts:
 * **dumpfks.php** – used to analyze a fresh Craft install and save a JSON dump
   of all the foreign keys in the database. Results will be stored in the
   fkdumps/ folder.
-* **fikfks.php** – used to analyze a Craft install and find/repair any missing
+* **fixfks.php** – used to analyze a Craft install and find/repair any missing
   foreign keys, based on the dump created by **dumpfks.php**. A report will be
   given of all the missing FKs, as well as any invalid table values that would
   cause a foreign key constraint violation if the FKs were to exist. How the
