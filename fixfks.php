@@ -50,9 +50,24 @@ foreach ($matrixFields as $result)
 	$field = new FieldModel($result);
 	$tableName = $app->matrix->getContentTableName($field);
 
-	$fks[$tableName] = array(
-		'elementId' => array('elements', 'id', false),
-		'locale' => array('locales', 'locale', false),
+	$fks[] = array(
+		$tableName,
+		'elementId',
+		'elements',
+		'id',
+		'CASCADE',
+		null,
+		$app->db->getForeignKeyName($tableName, array('elementId')),
+	);
+
+	$fks[] = array(
+		$tableName,
+		'locale',
+		'locales',
+		'locale',
+		'CASCADE',
+		'CASCADE',
+		$app->db->getForeignKeyName($tableName, array('locale')),
 	);
 }
 
@@ -70,67 +85,71 @@ if ($backupDb)
 	}
 }
 
-// Find (and possibly restore) the missing FKs
-$missingFks = array();
-$tablePrefix = $app->db->tablePrefix;
+$report = array();
 
-/** @var $tables \CDbTableSchema[] */
-$tables = $app->db->getSchema()->getTables();
-
-foreach ($fks as $tableName => $tableFks)
+foreach ($fks as $fk)
 {
-	$rawTableName = $tablePrefix.$tableName;
+	list($tableName, $columns, $refTableName, $refColumns, $onDelete, $onUpdate, $fkName) = $fk;
 
-	if (!isset($tables[$rawTableName]))
+	// Make sure the table exists
+	if (MigrationHelper::getTable($tableName) === null)
 	{
-		throw new Exception("Table $rawTableName doesn't exist");
+		throw new Exception("Table $tableName doesn't exist");
 	}
 
-	foreach ($tableFks as $columnName => $fk)
+	$columns = explode(',', $columns);
+	$refColumns = explode(',', $refColumns);
+
+	if (count($columns) > 1 || count($refColumns) > 1)
 	{
-		if (!isset($tables[$rawTableName]->foreignKeys[$columnName]))
+		throw new Exception('Foreign keys spanning multiple columns is not supported.');
+	}
+
+	$columnName = $columns[0];
+	$refColumnName = $refColumns[0];
+	$allowNull = ($onDelete == 'SET NULL');
+
+	// Find the invalid values for this FK
+	$invalidValues = $app->db->createCommand()
+		->selectDistinct("t.$columnName")
+		->from("$tableName t")
+		->leftJoin("$refTableName r", "t.$columnName = r.$refColumnName")
+		->where(['and', "t.$columnName is not null", "r.$refColumnName is null"])
+		->queryColumn();
+
+	if ($run)
+	{
+		// Drop the existing FK if it exists
+		// Even if it does, we want to recreate it with the proper ON DELETE and ON UPDATE values
+		MigrationHelper::dropForeignKeyIfExists($tableName, $columns);
+
+		// Deal with any invalid values
+		if ($invalidValues)
 		{
-			list($refTableName, $refColumnName, $allowNull) = $fk;
+			$condition = array('in', $columnName, $invalidValues);
 
-			// Find the invalid values for this FK
-			$invalidValues = $app->db->createCommand()
-				->selectDistinct("t.$columnName")
-				->from("$tableName t")
-				->leftJoin("$refTableName r", "t.$columnName = r.$refColumnName")
-				->where(array('and', "t.$columnName is not null", "r.$refColumnName is null"))
-				->queryColumn();
-
-			if ($run)
+			if ($allowNull)
 			{
-				if ($invalidValues)
-				{
-					// Deal with them
-					$condition = array('in', $columnName, $invalidValues);
-
-					if ($allowNull)
-					{
-						$app->db->createCommand()->update($tableName, array($columnName => null), $condition, array(), false);
-					}
-					else
-					{
-						$app->db->createCommand()->delete($tableName, $condition);
-					}
-				}
-
-				// Add the FK
-				$app->db->createCommand()->addForeignKey($tableName, $columnName, $refTableName, $refColumnName);
+				$app->db->createCommand()->update($tableName, array($columnName => null), $condition, array(), false);
 			}
-
-			$missingFks[] = array($tableName, $columnName, $refTableName, $refColumnName, $allowNull, $invalidValues);
+			else
+			{
+				$app->db->createCommand()->delete($tableName, $condition);
+			}
 		}
+
+		// Add the FK
+		$app->db->createCommand()->addForeignKey($tableName, $columnName, $refTableName, $refColumnName, $onDelete, $onUpdate);
 	}
+
+	$report[] = array($tableName, $columnName, $refTableName, $refColumnName, $allowNull, $invalidValues);
 }
 
 ?>
 
 <html>
 <head>
-	<title>Restore Missing FKs</title>
+	<title>Restore FKs</title>
 	<style type="text/css">
 		body { font-family: sans-serif; font-size: 13px; line-height: 1.4; }
 		li p { margin-left: 40px; }
@@ -143,15 +162,15 @@ foreach ($fks as $tableName => $tableFks)
 		<? if ($run): ?>
 			FK Restoration Report
 		<? else: ?>
-			Missing FK Report
+			FK Restoration Plan
 		<? endif ?>
 	</h1>
 
-	<? if ($missingFks): ?>
-		<p><?=$run?'Restored':'Found'?> <?=count($missingFks)?> missing FKs:</p>
+	<? if ($report): ?>
+		<p><?=count($report)?> FKs <?=$run?'have been':'will be'?> restored:</p>
 
 		<ul>
-			<? foreach ($missingFks as $fk): ?>
+			<? foreach ($report as $fk): ?>
 				<li><code>`<?=$fk[0]?>`.`<?=$fk[1]?>`</code> &rarr; <code>`<?=$fk[2]?>`.`<?=$fk[3]?>`</code>
 					<? if ($fk[5]): ?>
 						<p>
@@ -165,13 +184,13 @@ foreach ($fks as $tableName => $tableFks)
 			<? endforeach ?>
 		</ul>
 	<? else: ?>
-		<p>No missing FKs.</p>
+		<p>No FKs.</p>
 	<? endif ?>
 
 	<hr>
 
 	<form method="post">
-		<input type="submit" name="run" value="Restore missing FKs">
+		<input type="submit" name="run" value="Restore FKs">
 		<label><input type="checkbox" name="backupdb" value="1" checked> Backup DB first</label>
 	</form>
 </body>

@@ -30,19 +30,25 @@ $run = !empty($_POST['run']);
 
 if ($run)
 {
-	$fks = [];
+	$fks = array();
 
-	/** @var $tables \CDbTableSchema[] */
-	$tables = $app->db->getSchema()->getTables();
+	$tables = MigrationHelper::getTables();
 
 	foreach ($tables as $tableName => $table)
 	{
-		if ($table->foreignKeys)
+		if ($table->fks)
 		{
-			foreach ($table->foreignKeys as $columnName => $fk)
+			foreach ($table->fks as $fk)
 			{
-				$allowNull = $table->getColumn($columnName)->allowNull;
-				$fks[$tableName][$columnName] = array($fk[0], $fk[1], $allowNull);
+				$fks[] = array(
+					$fk->table->name,
+					implode(',', $fk->columns),
+					$fk->refTable,
+					implode(',', $fk->refColumns),
+					$fk->onDelete,
+					$fk->onUpdate,
+					$fk->name,
+				);
 			}
 		}
 	}
