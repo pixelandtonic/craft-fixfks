@@ -114,7 +114,7 @@ foreach ($fks as $fk)
 		->selectDistinct("t.$columnName")
 		->from("$tableName t")
 		->leftJoin("$refTableName r", "t.$columnName = r.$refColumnName")
-		->where(['and', "t.$columnName is not null", "r.$refColumnName is null"])
+		->where(array('and', "t.$columnName is not null", "r.$refColumnName is null"))
 		->queryColumn();
 
 	if ($run)
