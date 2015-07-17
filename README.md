@@ -19,7 +19,7 @@ If you have a database that is missing some foreign keys, follow these steps:
 
 1. Check the fkdumps/ folder and see if a foreign key dump exists for your
    installed version of Craft. If so, skip to step 8.
-2. Create a new database, which will be used to install a tepmorary version of
+2. Create a new database, which will be used to install a temporary version of
    Craft.
 3. If craft/config/db.php isn’t already a [multi-environment config] file, move
    the config settings within it into a sub-array with the key `'*'`:
