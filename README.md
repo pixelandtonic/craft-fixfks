@@ -36,7 +36,7 @@ If you have a database that is missing some foreign keys, follow these steps:
 
         'fresh' => array(
             'database' => 'new_database_name',
-            'tablePrefix' => '',
+            'tablePrefix' => '', // PREFIX MUST BE EMPTY
         ),
 
 5. Upload dumpfks.php to your web server and access it with your browser.
