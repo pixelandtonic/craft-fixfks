@@ -55,9 +55,9 @@ if ($run)
 
 	$output = JsonHelper::encode($fks);
 
-	if (!file_exists('fks'))
+	if (!file_exists('fkdumps'))
 	{
-		mkdir('fks');
+		mkdir('fkdumps');
 	}
 
 	file_put_contents('fkdumps/'.$version.'.json', $output);
